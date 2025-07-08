@@ -1,0 +1,75 @@
+// import React, { useRef } from 'react';
+// import { View, Animated, PanResponder, StyleSheet } from 'react-native';
+
+// const CIRCLE_RADIUS = 180;
+// const SQUARE_SIZE = 90;
+
+// const DraggableSquare = () => {
+//   const pan = useRef(new Animated.ValueXY()).current;
+
+//   const panResponder = useRef(
+//     PanResponder.create({
+//       onStartShouldSetPanResponder: () => true,
+//       onPanResponderMove: Animated.event(
+//         [null, { dx: pan.x, dy: pan.y }],
+//         { useNativeDriver: false }
+//       ),
+//       onPanResponderRelease: () => {
+//         const { x, y } = pan.__getValue(); // center-relative position
+//         const distance = Math.sqrt(x ** 2 + y ** 2);
+
+//         if (distance < CIRCLE_RADIUS - SQUARE_SIZE / 2) {
+//           Animated.spring(pan, {
+//             toValue: { x: 0, y: 0 },
+//             useNativeDriver: false,
+//           }).start(() => {
+//             pan.setOffset({x:0, y: 0});
+//             pan.setValue({x:0,y:0})
+//           });
+//         }else{
+//           pan.extractOffset();
+//           pan.setValue({x:0, y:0});
+//         }
+//       },
+//     })
+//   ).current;
+
+// //   return (
+// //     <View style={styles.container}>
+// //       <View style={styles.circle}>
+// //         <Animated.View
+// //           style={[styles.square, { transform: pan.getTranslateTransform() }]}
+// //           {...panResponder.panHandlers}
+// //         />
+// //       </View>
+// //     </View>
+// //   );
+// // };
+
+// export default DraggableSquare;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#eef',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   square: {
+//     width: SQUARE_SIZE,
+//     height: SQUARE_SIZE,
+//     backgroundColor: '#3498db',
+//     borderRadius: 10,
+//     position: 'absolute',
+//   },
+//   circle: {
+//     width: CIRCLE_RADIUS * 2,
+//     height: CIRCLE_RADIUS * 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     borderRadius: CIRCLE_RADIUS,
+//     borderWidth: 5,
+//     borderColor: 'rgba(0,0,256,0.5)',
+//     position: 'relative',
+//   },
+// })
