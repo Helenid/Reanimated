@@ -1,0 +1,240 @@
+
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  View,
+  Animated,
+  FlatList,
+  Dimensions,
+  Text,
+  Image,
+  StyleSheet,
+} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8; // Adjusted to fit the screen better
+const CARD_HEIGHT = height * 0.5;
+const SIDE_SPACING = (width - CARD_WIDTH) / 2;
+const VERTICAL_MARGIN = (height - CARD_HEIGHT) / 2;
+
+const DATA = [
+  {
+    id: '1',
+    title: 'Strawberry',
+    image: require('./assets/slide1.png'),
+    backgroundColor: '#ff7675',
+  },
+  {
+    id: '2',
+    title: 'Orange',
+    image: require('./assets/orange.png'),
+    backgroundColor: 'orange',
+  },
+  {
+    id: '3',
+    title: 'Kiwi',
+    image: require('./assets/kiwi.png'),
+     backgroundColor: 'green',
+  },
+  {
+    id: '4',
+    title: 'Apricot',
+    image: require('./assets/apricot.png'),
+     backgroundColor: 'orange',
+  },
+  {
+    id: '5',
+    title: 'Blueberry',
+    image: require('./assets/blueberry.png'),
+     backgroundColor: 'blue',
+  },
+];
+
+export default function CardCarousel() {
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const flatListRef = useRef(null);
+
+
+useEffect(() => {
+  // Animate title
+  Animated.timing(fadeAnim, {
+    toValue: 0,
+    duration: 150,
+    useNativeDriver: true,
+  }).start(() => {
+    // Scroll to new card
+    flatListRef.current?.scrollToIndex({ index: currentIndex, animated: true });
+
+    // Fade in
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  });
+}, [currentIndex]);
+
+  useEffect(() => {
+  const interval = setInterval(() => {
+    setCurrentIndex((prev) => (prev + 1) % DATA.length);
+
+  }, 4000); // Change every 4 seconds
+
+  return () => clearInterval(interval);
+}, []);
+
+
+  const renderItem = ({ item }) => (
+    <View
+      style={[
+        styles.cardContainer,
+        {
+          marginTop: VERTICAL_MARGIN,
+          marginBottom: VERTICAL_MARGIN,
+        },
+      ]}
+    >
+      <View style={[styles.card, { backgroundColor: item.backgroundColor }]}>
+          <Image source={item.image} style={styles.image} resizeMode="cover" />
+        
+        {/* <View style={styles.overlay}>
+          <Text style={styles.title}>{item.title}</Text>
+        </View> */}
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={styles.screen}>
+      <Animated.FlatList
+        data={DATA}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        horizontal
+        snapToInterval={CARD_WIDTH}
+        decelerationRate="fast"
+        bounces={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: SIDE_SPACING }}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
+        )}
+        onMomentumScrollEnd={(event) => {
+          const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
+          if (index !== currentIndex) setCurrentIndex(index);
+        }}
+      />
+
+{/* Title + Pagination below cards */}
+
+<View style={styles.footer}>
+  <Animated.Text style={[styles.cardTitle, { opacity: fadeAnim }]}>
+    {DATA[currentIndex]?.title}
+  </Animated.Text>
+
+  <View style={styles.pagination}>
+    {DATA.map((_, index) => {
+      const inputRange = [
+        (index - 1) * CARD_WIDTH,
+        index * CARD_WIDTH,
+        (index + 1) * CARD_WIDTH,
+      ];
+
+      const dotWidth = scrollX.interpolate({
+        inputRange,
+        outputRange: [8, 16, 8],
+        extrapolate: 'clamp',
+      });
+
+      const backgroundColor = index === currentIndex
+        ? DATA[currentIndex].backgroundColor
+        : '#ccc'; // fallback color
+
+      return (
+        <Animated.View
+          key={index}
+          style={[
+            styles.dot,
+            { width: dotWidth, backgroundColor },
+          ]}
+        />
+      );
+    })}
+  </View>
+</View>
+
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  cardContainer: {
+    width: CARD_WIDTH,
+    alignSelf: 'center',
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 10,
+    elevation: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  // overlay: {
+  //   position: 'absolute',
+  //   bottom: 20,
+  //   left: 20,
+  //   backgroundColor: 'rgba(0,0,0,0.5)',
+  //   paddingHorizontal: 10,
+  //   paddingVertical: 6,
+  //   borderRadius: 10,
+  // },
+  title: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  cardTitle: {
+  position: 'absolute',
+  left: 50,
+  bottom:150,
+  fontSize: 22,
+  fontWeight: 'bold',
+  color: '#000',
+},
+
+ footer: {
+  marginTop: 10,
+  alignItems: 'center',
+},
+
+pagination: {
+  position:'absolute',
+  bottom:140,
+  left:50,
+  flexDirection: 'row',
+},
+
+dot: {
+  height: 8,
+  borderRadius: 4,
+  marginHorizontal: 4,
+},
+
+});

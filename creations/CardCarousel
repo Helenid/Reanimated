@@ -1,0 +1,231 @@
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  View,
+  Animated,
+  FlatList,
+  Dimensions,
+  Text,
+  Image,
+  StyleSheet,
+} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.8;
+const CARD_HEIGHT = height * 0.55;
+const SIDE_SPACING = (width - CARD_WIDTH) / 2;
+
+const DATA = [
+  {
+    id: '1',
+    title: 'Strawberry',
+    category: 'Fruit',
+    image: require('./assets/slide1.png'),
+    backgroundColor: '#F87B90',
+  },
+  {
+    id: '2',
+    title: 'Orange',
+    category: 'Fruit',
+    image: require('./assets/t.png'),
+    backgroundColor: 'orange',
+  },
+  {
+    id: '3',
+    title: 'Kiwi',
+    category: 'Fruit',
+    image: require('./assets/kiwi.png'),
+    backgroundColor: '#636B2F',
+  },
+  {
+    id: '4',
+    title: 'Apricot',
+    category: 'Fruit',
+    image: require('./assets/q.png'),
+    backgroundColor: 'orange',
+  },
+  {
+    id: '5',
+    title: 'Blueberry',
+    category: 'Fruit',
+    image: require('./assets/blueberry.png'),
+    backgroundColor: '#464196',
+  },
+  {
+    id: '6',
+    title: 'Pineapple',
+    category: 'Fruit',
+    image: require('./assets/u.png'),
+    backgroundColor: '#f8d016',
+  },
+  {
+    id: '7',
+    title: 'Tomato',
+    category: 'Fruit',
+    image: require('./assets/x.png'),
+    backgroundColor: '#B21807',
+  },
+  {
+    id: '8',
+    title: 'Apple',
+    category: 'Fruit',
+    image: require('./assets/w.png'),
+    backgroundColor: '#FEB500',
+  },
+];
+
+export default function CardCarousel() {
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef(null);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+    ]).start();
+  }, [currentIndex]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const nextIndex = (currentIndex + 1) % DATA.length;
+      flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+      setCurrentIndex(nextIndex);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
+  const renderItem = ({ item }) => (
+    <View style={styles.cardContainer}>
+      <View style={[styles.card, { backgroundColor: item.backgroundColor }]}>
+        <Image source={item.image} style={styles.image} resizeMode="cover" />
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={styles.screen}>
+      <View style={styles.carouselSection}>
+        <Text style={styles.label}>Your Favorite Fruit Juice</Text>
+
+        <Animated.FlatList
+          ref={flatListRef}
+          data={DATA}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          horizontal
+          snapToInterval={CARD_WIDTH}
+          decelerationRate="fast"
+          bounces={false}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: SIDE_SPACING }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            { useNativeDriver: false }
+          )}
+          onMomentumScrollEnd={(event) => {
+            const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
+            if (index !== currentIndex) {
+              setCurrentIndex(index);
+            }
+          }}
+        />
+
+        <View style={styles.footer}>
+          <Animated.Text style={[styles.cardTitle, { opacity: fadeAnim }]}>
+            {DATA[currentIndex]?.title}
+          </Animated.Text>
+
+          <View style={styles.pagination}>
+            {DATA.map((_, index) => {
+              const inputRange = [
+                (index - 1) * CARD_WIDTH,
+                index * CARD_WIDTH,
+                (index + 1) * CARD_WIDTH,
+              ];
+
+              const dotWidth = scrollX.interpolate({
+                inputRange,
+                outputRange: [8, 16, 8],
+                extrapolate: 'clamp',
+              });
+
+              const backgroundColor =
+                index === currentIndex
+                  ? DATA[currentIndex].backgroundColor
+                  : '#ccc';
+
+              return (
+                <Animated.View
+                  key={index}
+                  style={[styles.dot, { width: dotWidth, backgroundColor }]}
+                />
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  carouselSection: {
+    alignItems: 'center',
+  },
+  label: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#222',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  cardContainer: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    alignSelf: 'center',
+  },
+  card: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 10,
+    elevation: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  footer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+  },
+  pagination: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+});
