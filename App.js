@@ -2,195 +2,147 @@ import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
-  Image,
+  Animated,
+  TouchableWithoutFeedback,
   StyleSheet,
   Dimensions,
-  Animated,
   FlatList,
-  TouchableOpacity,
+  ImageBackground,
 } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
+const COLLAPSED_WIDTH = width * 0.3;
+const EXPANDED_WIDTH = width * 0.8;
+const CARD_HEIGHT = 250;
 
-const DATA = [
+const FLOWERS = [
   {
     id: '1',
-    title: 'Strawberry Delight',
-    image: require('./assets/kiwi.png'),
-    price: '$4.99',
-    description: 'A delicious blend of fresh strawberries and cream. Perfect for a hot day!',
+    name: 'Rose',
+    description: 'Symbol of love and passion.',
+    image: require('./assets/rose.webp'),
   },
   {
     id: '2',
-    title: 'Vanilla Heaven',
-    image: require('./assets/blueberry.png'),
-    price: '$5.49',
-    description: 'Rich and creamy vanilla ice cream topped with a sprinkle of nuts. A classic treat!',
+    name: 'Lily',
+    description: 'Represents purity and renewal.',
+    image: require('./assets/lily.webp'),
   },
   {
     id: '3',
-    title: 'Chocolate Blast',
-    image: require('./assets/kiwi.png'),
-    price: '$5.99',
-    description: 'Indulge in our rich chocolate ice cream, a favorite for chocolate lovers!',
+    name: 'Tulip',
+    description: 'Perfect love and elegance.',
+    image: require('./assets/tulip.jpeg'),
   },
 ];
 
-const ITEM_WIDTH = width * 0.8;
-const SPACER = (width - ITEM_WIDTH) / 2;
+export default function FloraCards() {
+  const [expandedId, setExpandedId] = useState(null);
+  const animatedValues = useRef(FLOWERS.map(() => new Animated.Value(COLLAPSED_WIDTH))).current;
+  const rotationValues = useRef(FLOWERS.map(() => new Animated.Value(1))).current;
 
-const App = () => {
-  const scrollX = useRef(new Animated.Value(0)).current;
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const handlePress = (index) => {
+  const isSameCard = FLOWERS[index].id === expandedId;
 
-  const onScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    {
-      useNativeDriver: true,
-      listener: (event) => {
-        const x = event.nativeEvent.contentOffset.x;
-        const index = Math.round(x / ITEM_WIDTH);
-        setCurrentIndex(index);
-      },
-    }
-  );
+  FLOWERS.forEach((_, i) => {
+    const isExpanding = !isSameCard && i === index;
+
+    Animated.timing(animatedValues[i], {
+      toValue: isExpanding ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+
+    Animated.timing(rotationValues[i], {
+      toValue: isExpanding ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  });
+
+  setExpandedId(isSameCard ? null : FLOWERS[index].id);
+};
+
+
+  const renderItem = ({ item, index }) => {
+    const animatedWidth = animatedValues[index];
+    const rotation = rotationValues[index].interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '-90deg'],
+    });
+
+    return (
+      <TouchableWithoutFeedback onPress={() => handlePress(index)}>
+        <Animated.View style={[styles.card, { width: animatedWidth }]}>
+          <ImageBackground
+            source={item.image}
+            style={styles.imageBackground}
+            imageStyle={{ borderRadius: 16 }}
+          >
+            <Animated.Text style={[styles.name, { transform: [{ rotate: rotation }] }]}>
+              {item.name}
+            </Animated.Text>
+            {expandedId === item.id && (
+              <Text style={styles.description}>{item.description}</Text>
+            )}
+          </ImageBackground>
+        </Animated.View>
+      </TouchableWithoutFeedback>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {/* Image Carousel */}
-      <Animated.FlatList
-        data={[{ id: 'spacer-left' }, ...DATA, { id: 'spacer-right' }]}
-        horizontal
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={ITEM_WIDTH}
-        decelerationRate="fast"
-        bounces={false}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        contentContainerStyle={{ alignItems: 'center' }}
-        renderItem={({ item, index }) => {
-          if (!item.image) return <View style={{ width: SPACER }} />;
-
-          const inputRange = [
-            (index - 2) * ITEM_WIDTH,
-            (index - 1) * ITEM_WIDTH,
-            index * ITEM_WIDTH,
-          ];
-
-          // const translateY = scrollX.interpolate({
-          //   inputRange,
-          //   outputRange: [50, 0, 50],
-          //   extrapolate: 'clamp',
-          // });
-
-          const translateY = scrollX.interpolate({
-            inputRange,
-            outputRange: [-100, 0, 100],
-            extrapolate: 'clamp',
-          });
-
-          const translateX = scrollX.interpolate({
-            inputRange,
-            outputRange: [80, 0, -80],
-            extrapolate: 'clamp',
-          });
-
-
-          const scale = scrollX.interpolate({
-            inputRange,
-            outputRange: [0.9, 1, 0.9],
-            extrapolate: 'clamp',
-          });
-
-          return (
-            <Animated.View style={[styles.imageWrapper, { transform: [{ scale }] }]}>
-              <Animated.Image
-                source={item.image}
-                style={[styles.image, { transform: [{ translateY }, 
-                  { translateX },
-                ] }]}
-              />
-            </Animated.View>
-          );
-        }}
-      />
-
-      {/* Fixed Info Card */}
-      <View style={styles.card}>
-        <Text style={styles.price}>{DATA[currentIndex]?.price}</Text>
-        <Text style={styles.title}>{DATA[currentIndex]?.title}</Text>
-        <Text style={styles.description}>{DATA[currentIndex]?.description}</Text>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Got it</Text>
-        </TouchableOpacity>
+      <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
+        <FlatList
+          data={FLOWERS}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          contentContainerStyle={{ paddingHorizontal: 10 }}
+          showsHorizontalScrollIndicator={false}
+        />
       </View>
     </View>
   );
-};
-export default App;
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'blue',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  imageWrapper: {
-    width: ITEM_WIDTH,
-    alignItems: 'center',
-    marginHorizontal: 10,
-  },
-  image: {
-    width: ITEM_WIDTH * 0.9,
-    height: '70%',
-    borderRadius: 20,
-    resizeMode: 'cover',
+    backgroundColor: '#AAA',
   },
   card: {
-    position: 'absolute',
-    bottom: 50,
-    width: width * 0.85,
-    backgroundColor: 'white',
-    padding: 20,
+    height: CARD_HEIGHT,
     borderRadius: 16,
-    height: 230,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    marginHorizontal: 10,
+    overflow: 'hidden',
+    alignSelf: 'center',
   },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 6,
+  imageBackground: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 12,
   },
-  price: {
+  name: {
     fontSize: 26,
-    color: '#000',
     fontWeight: 'bold',
-    marginBottom: 12,
+    color: '#fff',
+    // backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
   description: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#000',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    width: '100%',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 16,
+    marginTop: 8,
+    fontSize: 14,
+    color: '#fff',
+    // backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
 });
