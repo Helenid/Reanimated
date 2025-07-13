@@ -75,5 +75,6 @@ export default function App() {
     //     data={[{id:'left-spacer'}, DATA, {id:'right-spacer'}]}
     //   />
     // </Animated.View>}
+    
   )
 }
