@@ -43,7 +43,7 @@ const DATA = [
     image: require('./assets/choc.png'),
     price: '$5.99',
     description: 'Rich chocolate ice cream for chocolate lovers!',
-    backgroundColor: '#5A3E36',
+    backgroundColor: '#84563B',
   },
 ];
 
