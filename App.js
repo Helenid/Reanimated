@@ -20,6 +20,7 @@ const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
 const SPACER = (width - ITEM_WIDTH) / 2;
 
+
 const DATA = [
   {
     id: '1',
