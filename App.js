@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-
 import Animated, {
   useSharedValue,
   useAnimatedScrollHandler,
