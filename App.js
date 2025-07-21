@@ -15,7 +15,6 @@ import Animated, {
   useAnimatedStyle,
   interpolateColor,
 } from 'react-native-reanimated';
-// This code creates a horizontal scrollable list of ice cream items with an animated background that changes color based on the currently viewed item. Each item has a card displaying its details, and the user can interact with it by tapping a button.
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width * 0.8;
