@@ -177,4 +177,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
 // This code creates a horizontal scrollable list of ice cream items with an animated background that changes color based on the currently viewed item. Each item has a card displaying its details, and the user can interact with it by tapping a button.
